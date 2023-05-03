@@ -16,11 +16,15 @@ impl<L: Location> Output<L> {
     }
 }
 
+#[allow(clippy::large_enum_variant)]
 #[derive(Forwarder, Debug)]
 pub enum CrawlOutput {
     #[forward] User(Output<location::User>),
-    #[forward] Project(Box<Output<location::Project>>),
+    #[forward] Project(Output<location::Project>),
     #[forward] UserComments(Output<location::UserComments>),
-    #[forward] UserCommentsScroll(Output<location::UserCommentsScroll>),
     #[forward] UserProjects(Output<location::UserProjects>),
+    #[forward] UserFavorites(Output<location::UserFavorites>),
+    #[forward] UserCuratingStudios(Output<location::UserCuratingStudios>),
+    #[forward] UserFollowing(Output<location::UserFollowing>),
+    #[forward] UserFollowers(Output<location::UserFollowers>),
 }

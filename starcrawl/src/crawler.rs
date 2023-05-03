@@ -18,7 +18,8 @@ impl Crawler {
         }
     }
 
-    pub fn next<'a>(&'a mut self) -> Option<impl Future<Output = CrawlOutput> + 'a> {
+    #[allow(clippy::should_implement_trait)]
+    pub fn next(&mut self) -> Option<impl Future<Output = CrawlOutput> + '_> {
         let location = self.locations.pop_front()?;
         Some(async {
             let (locations, output) = Crawl::new(location, self.location_session.clone()).run().await;
@@ -48,20 +49,36 @@ impl Crawl {
             CrawlLocation::User(location) => {
                 let capture = location.capture(self.location_session.clone()).await;
                 (capture.populate(), Output::new(location, capture).into())
-            },
+            }
             CrawlLocation::UserComments(location) => {
                 let capture = location.capture(self.location_session.clone()).await;
                 (capture.populate(), Output::new(location, capture).into())
-            },
-            CrawlLocation::UserCommentsScroll(location) => {
-                let capture = location.capture(self.location_session.clone()).await;
-                (capture.populate(), Output::new(location, capture).into())
-            },
+            }
             CrawlLocation::UserProjects(location) => {
                 let capture = location.capture(self.location_session.clone()).await;
                 (capture.populate(), Output::new(location, capture).into())
-            },
-            _ => todo!()
+            }
+            CrawlLocation::UserFavorites(location) => {
+                let capture = location.capture(self.location_session.clone()).await;
+                (capture.populate(), Output::new(location, capture).into())
+            }
+            CrawlLocation::UserCuratingStudios(location) => {
+                let capture = location.capture(self.location_session.clone()).await;
+                (capture.populate(), Output::new(location, capture).into())
+            }
+            CrawlLocation::UserFollowing(location) => {
+                let capture = location.capture(self.location_session.clone()).await;
+                (capture.populate(), Output::new(location, capture).into())
+            }
+            CrawlLocation::UserFollowers(location) => {
+                let capture = location.capture(self.location_session.clone()).await;
+                (capture.populate(), Output::new(location, capture).into())
+            }
+
+            CrawlLocation::Project(location) => {
+                let capture = location.capture(self.location_session.clone()).await;
+                (capture.populate(), Output::new(location, capture).into())
+            }
         }
     }
 }
