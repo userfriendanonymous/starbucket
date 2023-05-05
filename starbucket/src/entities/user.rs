@@ -1,24 +1,13 @@
-use crate::location::CrawlLocation;
-
-use super::Capture;
 
 #[derive(Debug, Clone)]
-pub struct UserMeta {
+pub struct User {
     pub name: String,
     pub scratch_team: bool,
     pub id: u64,
     pub profile: UserProfile
 }
 
-impl Capture for UserMeta {
-    fn populate(&self) -> Vec<CrawlLocation> {
-        vec![
-            // UserMetaLocation("".to_owned()).into()
-        ]
-    }
-}
-
-impl From<s2rs::api::User> for UserMeta {
+impl From<s2rs::api::User> for User {
     fn from(value: s2rs::api::User) -> Self {
         Self {
             profile: value.profile.into(),

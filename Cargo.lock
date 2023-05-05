@@ -855,6 +855,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "starbucket"
+version = "0.1.0"
+dependencies = [
+ "s2rs",
+ "s2rs-derive",
+ "starcrawl",
+ "tokio",
+]
+
+[[package]]
 name = "starcrawl"
 version = "0.1.0"
 dependencies = [
@@ -865,10 +875,6 @@ dependencies = [
  "thiserror",
  "tokio",
 ]
-
-[[package]]
-name = "starflow"
-version = "0.1.0"
 
 [[package]]
 name = "syn"

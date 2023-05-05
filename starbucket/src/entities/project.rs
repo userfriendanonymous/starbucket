@@ -1,6 +1,7 @@
 
 
-pub struct ProjectMeta {
+#[derive(Debug, Clone)]
+pub struct Project {
     pub description: String,
     pub instructions: String,
     pub title: String,
@@ -12,7 +13,7 @@ pub struct ProjectMeta {
     pub remix: ProjectRemix,
 }
 
-impl From<s2rs::api::Project> for ProjectMeta {
+impl From<s2rs::api::Project> for Project {
     fn from(value: s2rs::api::Project) -> Self {
         Self {
             description: value.description,
@@ -28,6 +29,7 @@ impl From<s2rs::api::Project> for ProjectMeta {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct ProjectStats {
     pub loves: u32,
     pub favorites: u32,
@@ -46,6 +48,7 @@ impl From<s2rs::api::ProjectStats> for ProjectStats {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct ProjectHistory {
     pub created: String,
     pub modified: String,
@@ -62,6 +65,7 @@ impl From<s2rs::api::ProjectHistory> for ProjectHistory {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct ProjectRemix {
     pub parent: Option<u64>,
     pub root: Option<u64>,
@@ -76,6 +80,7 @@ impl From<s2rs::api::ProjectRemix> for ProjectRemix {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct ProjectAuthor {
     pub name: String,
     pub id: u64,

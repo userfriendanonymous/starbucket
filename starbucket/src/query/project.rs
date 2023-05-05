@@ -1,16 +1,17 @@
 use crate::entities;
 use super::{Logic, Text, Cmp, Query, Result, S2rsError};
 
-pub type ProjectMetaResult = Result<ProjectMeta, S2rsError>;
+pub type ProjectResult = Result<Project, S2rsError>;
 
-pub enum ProjectMeta {
+#[derive(Debug, Clone)]
+pub enum Project {
     Description(Logic<Text>),
     Instructions(Logic<Text>),
     Stats(Logic<ProjectStats>),
 }
 
-impl Query for ProjectMeta {
-    type C = entities::ProjectMeta;
+impl Query for Project {
+    type C = entities::Project;
     fn run(&self, capture: &Self::C) -> bool {
         match self {
             Self::Description(query) => query.run(&capture.description),
@@ -20,6 +21,7 @@ impl Query for ProjectMeta {
     }
 }
 
+#[derive(Debug, Clone)]
 pub enum ProjectStats {
     Loves(Logic<Cmp<u32>>),
     Favorites(Logic<Cmp<u32>>),

@@ -3,8 +3,8 @@ use crate::location::{Location, self};
 
 #[derive(Debug)]
 pub struct Output<L: Location> {
-    location: L,
-    capture: L::Capture
+    pub location: L,
+    pub capture: L::Capture
 }
 
 impl<L: Location> Output<L> {

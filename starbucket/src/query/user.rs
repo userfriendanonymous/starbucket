@@ -19,14 +19,14 @@ pub enum UserProject {
 // }
 
 #[derive(Debug)]
-pub enum UserMeta {
+pub enum User {
     Id(Logic<Cmp<u64>>),
     Profile(UserProfile),
     ScratchTeam(Logic<Bool>)
 }
 
-impl Query for UserMeta {
-    type C = entities::UserMeta;
+impl Query for User {
+    type C = entities::User;
     fn run(&self, capture: &Self::C) -> bool {
         match self {
             Self::Id(query) => query.run(&capture.id),

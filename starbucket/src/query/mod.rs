@@ -2,10 +2,12 @@
 pub use user::*;
 pub use project::*;
 pub use comment::*;
+pub use crawl::*;
 
 pub mod user;
 pub mod project;
 pub mod comment;
+pub mod crawl;
 
 pub trait Query {
     type C;
@@ -32,12 +34,12 @@ impl<T: Query, E: Query> Query for Result<T, E> {
     }
 }
 
-pub type UserMetaResult = Result<Logic<UserMeta>, Logic<S2rsError>>;
+pub type UserResult = Result<Logic<User>, Logic<S2rsError>>;
 
 pub enum CrawlQuery {
-    UserMeta(Logic<UserMetaResult>),
+    User(Logic<UserResult>),
     // UserProject(LogicQuery<UserProjectQuery>),
-    // ProjectMeta(LogicQuery<ProjectMetaQuery>),
+    // Project(LogicQuery<ProjectQuery>),
 }
 
 
@@ -57,27 +59,6 @@ impl<T: Query> Query for Logic<T> {
             Self::Or(left, right) => left.run(capture) || right.run(capture),
             Self::Not(this) => !this.run(capture),
             Self::This(this) => this.run(capture)
-        }
-    }
-}
-
-#[derive(Debug)]
-pub enum S2rsError {
-    Status(Logic<Cmp<u16>>),
-    Network,
-    Parsing
-}
-
-impl Query for S2rsError {
-    type C = s2rs::api::Error;
-    fn run(&self, capture: &Self::C) -> bool {
-        type E = s2rs::api::Error;
-        match self {
-            Self::Status(query) => if let E::Status(status) = capture {
-                query.run(&status.as_u16())
-            } else { false },
-            Self::Network => matches!(capture, E::Network(..)),
-            Self::Parsing => matches!(capture, E::Parsing(..)),
         }
     }
 }
