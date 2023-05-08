@@ -1,4 +1,5 @@
 
+use starcrawl::location;
 pub use user::*;
 pub use project::*;
 pub use comment::*;
@@ -12,6 +13,64 @@ pub mod crawl;
 pub trait Query {
     type C;
     fn run(&self, capture: &Self::C) -> bool;
+}
+
+#[derive(Debug, Clone)]
+pub enum Option<T: Query> {
+    Some(T),
+    None,
+}
+
+
+#[derive(Debug, Clone)]
+pub enum NextDirection {
+    Up,
+    Down,
+}
+
+impl Query for NextDirection {
+    type C = location::NextDirection;
+    fn run(&self, capture: &Self::C) -> bool {
+        match self {
+            Self::Up => matches!(capture, location::NextDirection::Up),
+            Self::Down => matches!(capture, location::NextDirection::Down)
+        }
+    }
+}
+
+impl<T: Query> Query for Option<T> {
+    type C = std::option::Option<T::C>;
+    fn run(&self, capture: &Self::C) -> bool {
+        match self {
+            Self::Some(query) => if let Some(data) = capture {
+                query.run(data)
+            } else { false },
+            Self::None => matches!(capture, None)
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub enum Vec<T: Query> {
+    Any(T)
+}
+
+impl<T: Query> Query for Vec<T> {
+    type C = std::vec::Vec<T::C>;
+    fn run(&self, capture: &Self::C) -> bool {
+        match self {
+            Self::Any(query) => {
+                let mut caught = false;
+                for item in capture.iter() {
+                    if query.run(item) {
+                        caught = true;
+                        break;
+                    }
+                }
+                caught
+            }
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -33,8 +92,6 @@ impl<T: Query, E: Query> Query for Result<T, E> {
         }
     }
 }
-
-pub type UserResult = Result<Logic<User>, Logic<S2rsError>>;
 
 pub enum CrawlQuery {
     User(Logic<UserResult>),
@@ -89,8 +146,8 @@ impl Query for Text {
     type C = String;
     fn run(&self, capture: &Self::C) -> bool {
         match self {
-            Self::Contains(data) => capture.contains(data),
-            Self::Is(data) => capture == data
+            Self::Contains(data) => capture.to_ascii_lowercase().contains(&data.to_ascii_lowercase()),
+            Self::Is(data) => capture.to_ascii_lowercase() == data.to_ascii_lowercase()
         }
     }
 }

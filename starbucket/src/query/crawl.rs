@@ -1,5 +1,8 @@
-use super::{Logic, Cmp, Query, User, Result, Project};
+use starcrawl::{capture::Capture, location::CrawlLocation};
 
+use super::{Logic, Cmp, Query, User, Project, Option, Result};
+
+pub type S2rsResult<T: Query> = Result<Logic<T>, Logic<S2rsError>>;
 
 #[derive(Debug)]
 pub enum S2rsError {
@@ -22,29 +25,18 @@ impl Query for S2rsError {
     }
 }
 
-// #[derive(Debug)]
-// pub struct UserCrawl(Result<User, S2rsError>);
+#[derive(Debug, Clone)]
+pub enum Chain<T: Query, N: Query> where T::C: Capture, N::C: Clone + Into<CrawlLocation> {
+    Next(Logic<Option<Logic<N>>>),
+    This(Logic<T>)
+}
 
-// impl Query for UserCrawl {
-//     type C = s2rs::api::Result<s2rs::api::User>;
-//     fn run(&self, capture: &Self::C) -> bool {
-//         let data = capture.as_ref();
-//         self.0.run(&capture.clone().map(|e| e.into()))
-//     }
-// }
-
-// #[derive(Debug)]
-// pub struct ProjectCrawl(Result<Project, S2rsError>);
-
-// impl ProjectCrawl {
-//     pub fn run(&self, capture: s2rs::api::Result<s2rs::api::Project>) -> bool {
-//         self.0.run(&cap)
-//     }
-// }
-
-// impl Query for ProjectCrawl {
-//     type C = s2rs::api::Result<s2rs::api::Project>;
-//     fn run(&self, capture: &Self::C) -> bool {
-//         self.0.run(&capture.clone().map(|e| e.into()))
-//     }
-// }
+impl<T: Query, N: Query> Query for Chain<T, N> where T::C: Capture, N::C: Clone + Into<CrawlLocation> {
+    type C = starcrawl::capture::Chain<T::C, N::C>;
+    fn run(&self, capture: &Self::C) -> bool {
+        match self {
+            Self::This(query) => query.run(&capture.this),
+            Self::Next(query) => query.run(&capture.next)
+        }
+    }
+}

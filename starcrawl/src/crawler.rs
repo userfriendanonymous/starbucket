@@ -21,6 +21,7 @@ impl Crawler {
     #[allow(clippy::should_implement_trait)]
     pub fn next(&mut self) -> Option<impl Future<Output = CrawlOutput> + '_> {
         let location = self.locations.pop_front()?;
+        println![ "{:?}", format!["{:?}", &location].split('}').next().unwrap() ];
         Some(async {
             let (locations, output) = Crawl::new(location, self.location_session.clone()).run().await;
             for location in locations {
