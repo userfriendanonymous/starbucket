@@ -2,12 +2,14 @@
 pub use project::*;
 pub use studio::*;
 pub use user::*;
+pub use comment::*;
 
 pub mod project;
 pub mod studio;
 pub mod user;
+pub mod comment;
 
-use crate::location::{CrawlLocation, self, Location};
+use crate::location::CrawlLocation;
 
 pub trait Capture {
     fn populate(&self) -> Vec<CrawlLocation>;
@@ -31,8 +33,6 @@ impl<T: Capture> Capture for Vec<T> {
         result
     }
 }
-
-
 
 impl Capture for s2rs::api::Error {
     fn populate(&self) -> Vec<CrawlLocation> {

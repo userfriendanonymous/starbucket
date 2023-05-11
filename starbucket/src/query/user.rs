@@ -30,7 +30,7 @@ impl Query for UserCommentsLocation {
 
 #[derive(Debug, Clone)]
 pub enum UserProjectsLocation {
-    Page(Logic<Cmp<u32>>),
+    Page(Logic<Cmp<usize>>),
     Name(Logic<Text>),
     Next(Option<NextDirection>),
 }
@@ -48,7 +48,7 @@ impl Query for UserProjectsLocation {
 
 #[derive(Debug, Clone)]
 pub enum UserFollowersLocation {
-    Page(Logic<Cmp<u32>>),
+    Page(Logic<Cmp<usize>>),
     Name(Logic<Text>),
     Next(Option<NextDirection>),
 }
@@ -66,7 +66,7 @@ impl Query for UserFollowersLocation {
 
 #[derive(Debug, Clone)]
 pub enum UserFollowingLocation {
-    Page(Logic<Cmp<u32>>),
+    Page(Logic<Cmp<usize>>),
     Name(Logic<Text>),
     Next(Option<NextDirection>),
 }

@@ -1,9 +1,15 @@
 use std::sync::Arc;
 use async_trait::async_trait;
-use crate::capture;
-use super::{Location, LocationSession};
+use crate::{location, capture};
+use super::{Location, LocationSession, CrawlLocation, NextDirection};
 
-#[derive(Debug, Clone)]
+pub fn populate_project(id: &u64) -> Vec<CrawlLocation> {
+    vec![
+        location::Project(*id).into()
+    ]
+}
+
+#[derive(Debug, Clone, Hash)]
 pub struct Project(pub u64);
 
 #[async_trait]

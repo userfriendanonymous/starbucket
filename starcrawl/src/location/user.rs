@@ -1,10 +1,10 @@
-use std::sync::Arc;
+use std::{sync::Arc, ops::Add};
 use async_trait::async_trait;
 use crate::capture;
 
 use super::{Location, LocationSession};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Hash)]
 pub struct User(pub String);
 
 #[async_trait]
@@ -15,24 +15,28 @@ impl Location for User {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Hash)]
 pub enum NextDirection {
     Up,
     Down,
 }
 
-impl NextDirection {
-    pub fn add_u8(self, value: u8) -> u8 {
+impl Add<usize> for NextDirection {
+    type Output = usize;
+    fn add(self, rhs: usize) -> Self::Output {
         match self {
-            Self::Up => value + 1,
-            Self::Down => value - 1
+            Self::Up => rhs + 1,
+            Self::Down => rhs - 1
         }
     }
-    
-    pub fn add_u32(self, value: u32) -> u32 {
+}
+
+impl Add<u8> for NextDirection {
+    type Output = u8;
+    fn add(self, rhs: u8) -> Self::Output {
         match self {
-            Self::Up => value + 1,
-            Self::Down => value - 1
+            Self::Up => rhs + 1,
+            Self::Down => rhs - 1
         }
     }
 }
@@ -70,7 +74,7 @@ impl Location for UserComments {
     async fn capture(&self, session: Arc<LocationSession>) -> Self::Capture {
         Ok(capture::Chain {
             next: self.next.map(|dir|
-                Self { name: self.name.clone(), page: dir.add_u8(self.page), next: self.next }
+                Self { name: self.name.clone(), page: dir + self.page, next: self.next }
             ),
             this: session.scratch.user_comments(&self.name, Some(self.page)).await?
         })
@@ -79,7 +83,7 @@ impl Location for UserComments {
 
 #[derive(Debug, Clone)]
 pub struct UserProjects {
-    pub page: u32,
+    pub page: usize,
     pub name: String,
     pub next: Option<NextDirection>,
 }
@@ -100,9 +104,9 @@ impl Location for UserProjects {
     async fn capture(&self, session: Arc<LocationSession>) -> Self::Capture {
         Ok(capture::UserProjects {
             next: self.next.map(|dir|
-                Self { name: self.name.clone(), page: dir.add_u32(self.page), next: self.next }
+                Self { name: self.name.clone(), page: dir + self.page, next: self.next }
             ),
-            this: session.scratch.user_projects(&self.name, s2rs::Cursor::with_start((self.page * 40) as _)).await?
+            this: session.scratch.user_projects(&self.name, s2rs::Cursor::with_start(self.page * 40)).await?
         })
     }
 }
@@ -110,7 +114,7 @@ impl Location for UserProjects {
 
 #[derive(Debug, Clone)]
 pub struct UserFavorites {
-    pub page: u32,
+    pub page: usize,
     pub name: String,
     pub next: Option<NextDirection>,
 }
@@ -131,16 +135,16 @@ impl Location for UserFavorites {
     async fn capture(&self, session: Arc<LocationSession>) -> Self::Capture {
         Ok(capture::UserFavorites {
             next: self.next.map(|dir|
-                Self { name: self.name.clone(), page: dir.add_u32(self.page), next: self.next }
+                Self { name: self.name.clone(), page: dir + self.page, next: self.next }
             ),
-            this: session.scratch.user_favorites(&self.name, s2rs::Cursor::with_start((self.page * 40) as _)).await?
+            this: session.scratch.user_favorites(&self.name, s2rs::Cursor::with_start(self.page * 40)).await?
         })
     }
 }
 
 #[derive(Debug, Clone)]
 pub struct UserCuratingStudios {
-    pub page: u32,
+    pub page: usize,
     pub name: String,
     pub next: Option<NextDirection>,
 }
@@ -161,9 +165,9 @@ impl Location for UserCuratingStudios {
     async fn capture(&self, session: Arc<LocationSession>) -> Self::Capture {
         Ok(capture::Chain {
             next: self.next.map(|dir|
-                Self { name: self.name.clone(), page: dir.add_u32(self.page), next: self.next }
+                Self { name: self.name.clone(), page: dir + self.page, next: self.next }
             ),
-            this: session.scratch.user_curating_studios(&self.name, s2rs::Cursor::with_start((self.page * 40) as _)).await?
+            this: session.scratch.user_curating_studios(&self.name, s2rs::Cursor::with_start(self.page * 40)).await?
         })
     }
 }
@@ -171,7 +175,7 @@ impl Location for UserCuratingStudios {
 
 #[derive(Debug, Clone)]
 pub struct UserFollowing {
-    pub page: u32,
+    pub page: usize,
     pub name: String,
     pub next: Option<NextDirection>,
 }
@@ -192,9 +196,9 @@ impl Location for UserFollowing {
     async fn capture(&self, session: Arc<LocationSession>) -> Self::Capture {
         Ok(capture::UserFollowing {
             next: self.next.map(|dir|
-                Self { name: self.name.clone(), page: dir.add_u32(self.page), next: self.next }
+                Self { name: self.name.clone(), page: dir + self.page, next: self.next }
             ),
-            this: session.scratch.user_following(&self.name, s2rs::Cursor::with_start((self.page * 40) as _)).await?
+            this: session.scratch.user_following(&self.name, s2rs::Cursor::with_start(self.page * 40)).await?
         })
     }
 }
@@ -203,7 +207,7 @@ impl Location for UserFollowing {
 
 #[derive(Debug, Clone)]
 pub struct UserFollowers {
-    pub page: u32,
+    pub page: usize,
     pub name: String,
     pub next: Option<NextDirection>,
 }
@@ -224,9 +228,43 @@ impl Location for UserFollowers {
     async fn capture(&self, session: Arc<LocationSession>) -> Self::Capture {
         Ok(capture::Chain {
             next: self.next.map(|dir|
-                Self { name: self.name.clone(), page: dir.add_u32(self.page), next: self.next }
+                Self { name: self.name.clone(), page: dir + self.page, next: self.next }
             ),
-            this: session.scratch.user_following(&self.name, s2rs::Cursor::with_start((self.page * 40) as _)).await?
+            this: session.scratch.user_following(&self.name, s2rs::Cursor::with_start(self.page * 40)).await?
+        })
+    }
+}
+
+
+
+#[derive(Clone, Debug, Hash)]
+pub struct UserProjectComments {
+    pub page: usize,
+    pub name: String,
+    pub id: u64,
+    pub next: Option<NextDirection>,
+}
+
+impl UserProjectComments {
+    pub fn new_up(name: String, id: u64) -> Self {
+        Self {
+            id,
+            name,
+            next: Some(NextDirection::Up),
+            page: 0
+        }
+    }
+}
+
+#[async_trait]
+impl Location for UserProjectComments {
+    type Capture = s2rs::api::Result<capture::UserProjectComments>;
+    async fn capture(&self, session: Arc<LocationSession>) -> Self::Capture {
+        Ok(capture::Chain {
+            next: self.next.map(|dir|
+                Self { id: self.id, name: self.name.clone(), page: dir + self.page, next: self.next }
+            ),
+            this: session.scratch.user_project_comments(&self.name, self.id, s2rs::Cursor::with_start(self.page * 40)).await?
         })
     }
 }

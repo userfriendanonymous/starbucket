@@ -31,14 +31,18 @@ impl LocationSession {
 #[derive(Forwarder, Clone, Debug)]
 pub enum CrawlLocation {
     #[forward] User(User),
-
     #[forward] UserComments(UserComments),
     #[forward] UserProjects(UserProjects),
     #[forward] UserFavorites(UserFavorites),
     #[forward] UserCuratingStudios(UserCuratingStudios),
     #[forward] UserFollowing(UserFollowing),
     #[forward] UserFollowers(UserFollowers),
+    #[forward] UserProjectComments(UserProjectComments),
 
     #[forward] Project(Project),
-}
 
+    #[forward] Studio(Studio),
+    #[forward] StudioActivity(StudioActivity),
+    #[forward] StudioProjects(StudioProjects),
+    #[forward] StudioComments(StudioComments),
+}
