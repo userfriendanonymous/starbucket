@@ -4,11 +4,13 @@ pub use user::*;
 pub use project::*;
 pub use comment::*;
 pub use crawl::*;
+pub use studio::*;
 
 pub mod user;
 pub mod project;
 pub mod comment;
 pub mod crawl;
+pub mod studio;
 
 pub trait Query {
     type C;

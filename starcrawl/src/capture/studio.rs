@@ -48,7 +48,9 @@ impl Capture for s2rs::api::GetStudioActivityError {
 
 impl Capture for s2rs::api::StudioProject {
     fn populate(&self) -> Vec<CrawlLocation> {
-        let mut items = vec![];
+        let mut items = vec![
+            location::Project(self.id).into()
+        ];
         items.append(&mut self.title.populate_actives());
         items.append(&mut populate_user(&self.name));
         items

@@ -5,13 +5,13 @@ use super::Capture;
 
 pub fn populate_user(name: &str) -> Vec<CrawlLocation> {
     vec![
-        location::User(name.to_owned()).into(),
-        location::UserFollowing::new_up(name.to_owned()).into(),
-        location::UserProjects::new_up(name.to_owned()).into(),
-        location::UserFavorites::new_up(name.to_owned()).into(),
-        location::UserCuratingStudios::new_up(name.to_owned()).into(),
-        location::UserComments::new_up(name.to_owned()).into(),
-        location::UserFollowers::new_up(name.to_owned()).into(),
+        location::User(name.into()).into(),
+        location::UserComments::new_up(name.into()).into(),
+        location::UserFollowing::new_up(name.into()).into(),
+        location::UserProjects::new_up(name.into()).into(),
+        location::UserFavorites::new_up(name.into()).into(),
+        location::UserCuratingStudios::new_up(name.into()).into(),
+        location::UserFollowers::new_up(name.into()).into(),
     ]
 }
 

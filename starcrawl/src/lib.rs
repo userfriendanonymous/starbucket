@@ -4,6 +4,9 @@ pub mod crawler;
 pub mod active_text;
 pub mod capture;
 pub mod output;
+pub mod user_name;
+
+pub use user_name::UserName;
 
 #[cfg(test)]
 mod tests {

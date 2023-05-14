@@ -1,17 +1,17 @@
-use std::{sync::Arc, ops::Add};
+use std::{sync::Arc, ops::Add, hash::Hash};
 use async_trait::async_trait;
-use crate::capture;
+use crate::{capture, UserName};
 
 use super::{Location, LocationSession};
 
-#[derive(Debug, Clone, Hash)]
-pub struct User(pub String);
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub struct User(pub UserName);
 
 #[async_trait]
 impl Location for User {
     type Capture = s2rs::api::Result<s2rs::api::User>;
     async fn capture(&self, session: Arc<LocationSession>) -> Self::Capture {
-        session.scratch.user_meta(&self.0).await
+        session.scratch.user_meta(self.0.as_str()).await
     }
 }
 
@@ -50,20 +50,20 @@ impl From<NextDirection> for i8 {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug, Hash)]
 pub struct UserComments {
     pub page: u8,
-    pub name: String,
+    pub name: UserName,
     pub next: Option<NextDirection>,
 }
 
 
 impl UserComments {
-    pub fn new(name: String, next: Option<NextDirection>) -> Self {
+    pub fn new(name: UserName, next: Option<NextDirection>) -> Self {
         Self { name, next, page: 0 }
     }
 
-    pub fn new_up(name: String) -> Self {
+    pub fn new_up(name: UserName) -> Self {
         Self::new(name, Some(NextDirection::Up))
     }
 }
@@ -76,24 +76,24 @@ impl Location for UserComments {
             next: self.next.map(|dir|
                 Self { name: self.name.clone(), page: dir + self.page, next: self.next }
             ),
-            this: session.scratch.user_comments(&self.name, Some(self.page)).await?
+            this: session.scratch.user_comments(self.name.as_str(), Some(self.page)).await?
         })
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug, Hash)]
 pub struct UserProjects {
     pub page: usize,
-    pub name: String,
+    pub name: UserName,
     pub next: Option<NextDirection>,
 }
 
 impl UserProjects {
-    pub fn new(name: String, next: Option<NextDirection>) -> Self {
+    pub fn new(name: UserName, next: Option<NextDirection>) -> Self {
         Self { name, next, page: 0 }
     }
 
-    pub fn new_up(name: String) -> Self {
+    pub fn new_up(name: UserName) -> Self {
         Self::new(name, Some(NextDirection::Up))
     }
 }
@@ -106,25 +106,25 @@ impl Location for UserProjects {
             next: self.next.map(|dir|
                 Self { name: self.name.clone(), page: dir + self.page, next: self.next }
             ),
-            this: session.scratch.user_projects(&self.name, s2rs::Cursor::with_start(self.page * 40)).await?
+            this: session.scratch.user_projects(self.name.as_str(), s2rs::Cursor::with_start(self.page * 40)).await?
         })
     }
 }
 
 
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug, Hash)]
 pub struct UserFavorites {
     pub page: usize,
-    pub name: String,
+    pub name: UserName,
     pub next: Option<NextDirection>,
 }
 
 impl UserFavorites {
-    pub fn new(name: String, next: Option<NextDirection>) -> Self {
+    pub fn new(name: UserName, next: Option<NextDirection>) -> Self {
         Self { name, next, page: 0 }
     }
 
-    pub fn new_up(name: String) -> Self {
+    pub fn new_up(name: UserName) -> Self {
         Self::new(name, Some(NextDirection::Up))
     }
 }
@@ -137,24 +137,24 @@ impl Location for UserFavorites {
             next: self.next.map(|dir|
                 Self { name: self.name.clone(), page: dir + self.page, next: self.next }
             ),
-            this: session.scratch.user_favorites(&self.name, s2rs::Cursor::with_start(self.page * 40)).await?
+            this: session.scratch.user_favorites(self.name.as_str(), s2rs::Cursor::with_start(self.page * 40)).await?
         })
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug, Hash)]
 pub struct UserCuratingStudios {
     pub page: usize,
-    pub name: String,
+    pub name: UserName,
     pub next: Option<NextDirection>,
 }
 
 impl UserCuratingStudios {
-    pub fn new(name: String, next: Option<NextDirection>) -> Self {
+    pub fn new(name: UserName, next: Option<NextDirection>) -> Self {
         Self { name, next, page: 0 }
     }
 
-    pub fn new_up(name: String) -> Self {
+    pub fn new_up(name: UserName) -> Self {
         Self::new(name, Some(NextDirection::Up))
     }
 }
@@ -167,25 +167,25 @@ impl Location for UserCuratingStudios {
             next: self.next.map(|dir|
                 Self { name: self.name.clone(), page: dir + self.page, next: self.next }
             ),
-            this: session.scratch.user_curating_studios(&self.name, s2rs::Cursor::with_start(self.page * 40)).await?
+            this: session.scratch.user_curating_studios(self.name.as_str(), s2rs::Cursor::with_start(self.page * 40)).await?
         })
     }
 }
 
 
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug, Hash)]
 pub struct UserFollowing {
     pub page: usize,
-    pub name: String,
+    pub name: UserName,
     pub next: Option<NextDirection>,
 }
 
 impl UserFollowing {
-    pub fn new(name: String, next: Option<NextDirection>) -> Self {
+    pub fn new(name: UserName, next: Option<NextDirection>) -> Self {
         Self { name, next, page: 0 }
     }
 
-    pub fn new_up(name: String) -> Self {
+    pub fn new_up(name: UserName) -> Self {
         Self::new(name, Some(NextDirection::Up))
     }
 }
@@ -198,26 +198,26 @@ impl Location for UserFollowing {
             next: self.next.map(|dir|
                 Self { name: self.name.clone(), page: dir + self.page, next: self.next }
             ),
-            this: session.scratch.user_following(&self.name, s2rs::Cursor::with_start(self.page * 40)).await?
+            this: session.scratch.user_following(self.name.as_str(), s2rs::Cursor::with_start(self.page * 40)).await?
         })
     }
 }
 
 
 
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug, Hash)]
 pub struct UserFollowers {
     pub page: usize,
-    pub name: String,
+    pub name: UserName,
     pub next: Option<NextDirection>,
 }
 
 impl UserFollowers {
-    pub fn new(name: String, next: Option<NextDirection>) -> Self {
+    pub fn new(name: UserName, next: Option<NextDirection>) -> Self {
         Self { name, next, page: 0 }
     }
 
-    pub fn new_up(name: String) -> Self {
+    pub fn new_up(name: UserName) -> Self {
         Self::new(name, Some(NextDirection::Up))
     }
 }
@@ -230,23 +230,21 @@ impl Location for UserFollowers {
             next: self.next.map(|dir|
                 Self { name: self.name.clone(), page: dir + self.page, next: self.next }
             ),
-            this: session.scratch.user_following(&self.name, s2rs::Cursor::with_start(self.page * 40)).await?
+            this: session.scratch.user_following(self.name.as_str(), s2rs::Cursor::with_start(self.page * 40)).await?
         })
     }
 }
 
-
-
 #[derive(Clone, Debug, Hash)]
 pub struct UserProjectComments {
     pub page: usize,
-    pub name: String,
+    pub name: UserName,
     pub id: u64,
     pub next: Option<NextDirection>,
 }
 
 impl UserProjectComments {
-    pub fn new_up(name: String, id: u64) -> Self {
+    pub fn new_up(name: UserName, id: u64) -> Self {
         Self {
             id,
             name,
@@ -264,7 +262,7 @@ impl Location for UserProjectComments {
             next: self.next.map(|dir|
                 Self { id: self.id, name: self.name.clone(), page: dir + self.page, next: self.next }
             ),
-            this: session.scratch.user_project_comments(&self.name, self.id, s2rs::Cursor::with_start(self.page * 40)).await?
+            this: session.scratch.user_project_comments(self.name.as_str(), self.id, s2rs::Cursor::with_start(self.page * 40)).await?
         })
     }
 }

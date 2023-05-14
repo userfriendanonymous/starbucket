@@ -28,7 +28,7 @@ impl LocationSession {
     }
 }
 
-#[derive(Forwarder, Clone, Debug)]
+#[derive(Forwarder, Clone, Debug, Hash)]
 pub enum CrawlLocation {
     #[forward] User(User),
     #[forward] UserComments(UserComments),

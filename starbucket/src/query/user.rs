@@ -21,7 +21,7 @@ impl Query for UserCommentsLocation {
     fn run(&self, capture: &Self::C) -> bool {
         match self {
             Self::Page(query) => query.run(&capture.page),
-            Self::Name(query) => query.run(&capture.name),
+            Self::Name(query) => query.run(&capture.name.clone().into()),
             Self::Next(query) => query.run(&capture.next)
         }
     }
@@ -40,7 +40,7 @@ impl Query for UserProjectsLocation {
     fn run(&self, capture: &Self::C) -> bool {
         match self {
             Self::Page(query) => query.run(&capture.page),
-            Self::Name(query) => query.run(&capture.name),
+            Self::Name(query) => query.run(&capture.name.clone().into()),
             Self::Next(query) => query.run(&capture.next)
         }
     }
@@ -58,7 +58,7 @@ impl Query for UserFollowersLocation {
     fn run(&self, capture: &Self::C) -> bool {
         match self {
             Self::Page(query) => query.run(&capture.page),
-            Self::Name(query) => query.run(&capture.name),
+            Self::Name(query) => query.run(&capture.name.clone().into()),
             Self::Next(query) => query.run(&capture.next)
         }
     }
@@ -76,7 +76,7 @@ impl Query for UserFollowingLocation {
     fn run(&self, capture: &Self::C) -> bool {
         match self {
             Self::Page(query) => query.run(&capture.page),
-            Self::Name(query) => query.run(&capture.name),
+            Self::Name(query) => query.run(&capture.name.clone().into()),
             Self::Next(query) => query.run(&capture.next)
         }
     }
@@ -87,7 +87,8 @@ impl Query for UserFollowingLocation {
 pub enum User {
     Id(Logic<Cmp<u64>>),
     Profile(UserProfile),
-    ScratchTeam(Logic<Bool>)
+    ScratchTeam(Logic<Bool>),
+    Text(Logic<Text>)
 }
 
 impl Query for User {
@@ -96,7 +97,8 @@ impl Query for User {
         match self {
             Self::Id(query) => query.run(&capture.id),
             Self::Profile(query) => query.run(&capture.profile),
-            Self::ScratchTeam(query) => query.run(&capture.scratch_team)
+            Self::ScratchTeam(query) => query.run(&capture.scratch_team),
+            Self::Text(query) => UserProfile::Text(query.clone()).run(&capture.profile)
         }
     }
 }
@@ -106,7 +108,8 @@ pub enum UserProfile {
     Bio(Logic<Text>),
     Wiwo(Logic<Text>),
     Country(Logic<Text>),
-    Id(Logic<Cmp<u64>>)
+    Id(Logic<Cmp<u64>>),
+    Text(Logic<Text>)
 }
 
 
@@ -117,7 +120,8 @@ impl Query for UserProfile {
             Self::Bio(query) => query.run(&capture.bio),
             Self::Wiwo(query) => query.run(&capture.status),
             Self::Country(query) => query.run(&capture.country),
-            Self::Id(query) => query.run(&capture.id)
+            Self::Id(query) => query.run(&capture.id),
+            Self::Text(query) => query.run(&capture.bio) || query.run(&capture.status)
         }
     }
 }

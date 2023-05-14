@@ -1,8 +1,23 @@
 use starcrawl::{capture::Capture, location::CrawlLocation};
-
-use super::{Logic, Cmp, Query, User, Project, Option, Result};
+use super::{Logic, Cmp, Query, User, Project, Option, Result, Text};
 
 pub type S2rsResult<T: Query> = Result<Logic<T>, Logic<S2rsError>>;
+
+#[derive(Debug, Clone)]
+pub enum IdWithTitle {
+    Id(Logic<Cmp<u64>>),
+    Title(Logic<Text>)
+}
+
+impl Query for IdWithTitle {
+    type C = (u64, String);
+    fn run(&self, (id, title): &Self::C) -> bool {
+        match self {
+            Self::Id(query) => query.run(id),
+            Self::Title(query) => query.run(title)
+        }
+    }
+}
 
 #[derive(Debug)]
 pub enum S2rsError {

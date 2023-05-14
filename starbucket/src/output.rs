@@ -1,32 +1,36 @@
-use std::sync::Arc;
 use s2rs_derive::Forwarder;
 use starcrawl::location::{Location, self};
 use crate::query::{Query, self};
 
 #[derive(Forwarder, Debug)]
-pub enum BucketOutput {
-    #[forward] User(Output<location::User, query::UserResult>),
-    #[forward] Project(Output<location::Project, query::ProjectResult>),
-    #[forward] UserComments(Output<location::UserComments, query::UserCommentsResult>),
-    #[forward] UserProjects(Output<location::UserProjects, query::UserProjectsResult>),
-    #[forward] UserFollowers(Output<location::UserFollowers, query::UserFollowersResult>),
-    #[forward] UserFollowing(Output<location::UserFollowing, query::UserFollowingResult>),
+pub enum BucketOutput<'a> {
+    #[forward] User(Output<'a, location::User, query::UserResult>),
+    #[forward] UserComments(Output<'a, location::UserComments, query::UserCommentsResult>),
+    #[forward] UserProjects(Output<'a, location::UserProjects, query::UserProjectsResult>),
+    #[forward] UserFollowers(Output<'a, location::UserFollowers, query::UserFollowersResult>),
+    #[forward] UserFollowing(Output<'a, location::UserFollowing, query::UserFollowingResult>),
+
+    #[forward] Project(Output<'a, location::Project, query::ProjectResult>),
+    #[forward] Studio(Output<'a, location::Studio, query::StudioResult>),
+    #[forward] StudioActivity(Output<'a, location::StudioActivity, query::StudioActivityResult>),
+    #[forward] StudioComments(Output<'a, location::StudioComments, query::StudioCommentsResult>),
+    #[forward] StudioProjects(Output<'a, location::StudioProjects, query::StudioProjectsResult>),
     Todo
 }
 
 #[derive(Debug)]
-pub struct Output<L: Location, Q: Query> {
+pub struct Output<'a, L: Location, Q: Query> {
     pub location: L,
     pub capture: Q::C,
-    pub queries: Vec<Arc<Q>>
+    pub queries: Vec<&'a Q>
 }
 
-impl<L: Location, Q: Query> Output<L, Q> {
-    pub fn run(capture: Q::C, location: L, queries: Arc<Vec<Arc<Q>>>) -> Self {
+impl<'a, L: Location, Q: Query> Output<'a, L, Q> {
+    pub fn run(capture: Q::C, location: L, queries: &'a [Q]) -> Self {
         let mut matching_queries = Vec::new();
         for query in queries.iter() {
             if query.run(&capture) {
-                matching_queries.push(query.clone());
+                matching_queries.push(query);
             }
         }
 
@@ -35,10 +39,5 @@ impl<L: Location, Q: Query> Output<L, Q> {
             location,
             queries: matching_queries
         }
-    }
-
-    pub fn from_crawl_output(output: starcrawl::output::Output<L>, queries: Arc<Vec<Arc<Q>>>) -> Self
-    where L::Capture: Into<Q::C> {
-        Self::run(output.capture.into(), output.location, queries)
     }
 }

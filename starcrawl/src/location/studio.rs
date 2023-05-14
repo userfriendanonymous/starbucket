@@ -3,8 +3,7 @@ use async_trait::async_trait;
 use crate::capture;
 use super::{Location, LocationSession, NextDirection};
 
-
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug, Hash)]
 pub struct Studio(pub u64);
 
 #[async_trait]

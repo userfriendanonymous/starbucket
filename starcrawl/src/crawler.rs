@@ -1,10 +1,11 @@
-use std::{sync::Arc, collections::VecDeque, future::Future};
+use std::{sync::Arc, collections::{VecDeque, hash_map}, future::Future, hash::{Hash, Hasher}};
 use crate::{location::{CrawlLocation, Location, LocationSession}, capture::Capture, output::{Output, CrawlOutput}};
 
 pub struct Crawler {
     api: Arc<s2rs::Api>,
     session: Arc<LocationSession>,
     locations: VecDeque<CrawlLocation>,
+    visited: VecDeque<u64>,
     // input: Arc<Input>
 }
 
@@ -14,14 +15,31 @@ impl Crawler {
         Self {
             api,
             locations,
-            session
+            session,
+            visited: VecDeque::new()
         }
     }
 
     #[allow(clippy::should_implement_trait)]
     pub fn next(&mut self) -> Option<impl Future<Output = CrawlOutput> + '_> {
-        let location = self.locations.pop_front()?;
+        let location = loop {
+            let location = self.locations.pop_front()?;
+
+            let mut hasher = hash_map::DefaultHasher::default();
+            location.hash(&mut hasher);
+            let hash = hasher.finish();
+    
+            if !self.visited.contains(&hash) {
+                if self.visited.len() >= 5000 {
+                    self.visited.pop_front();
+                }
+                self.visited.push_back(hash);
+                break location
+            }
+        };
+        
         println![ "{:?}", format!["{:?}", &location].split('}').next().unwrap() ];
+
         Some(async {
             let (locations, output) = Crawl::new(location, self.session.clone()).run().await;
             for location in locations {

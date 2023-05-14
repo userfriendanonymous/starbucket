@@ -7,6 +7,7 @@ pub enum Project {
     Description(Logic<Text>),
     Instructions(Logic<Text>),
     Stats(Logic<ProjectStats>),
+    Text(Logic<Text>),
 }
 
 impl Query for Project {
@@ -15,7 +16,8 @@ impl Query for Project {
         match self {
             Self::Description(query) => query.run(&capture.description),
             Self::Instructions(query) => query.run(&capture.instructions),
-            Self::Stats(query) => query.run(&capture.stats)
+            Self::Stats(query) => query.run(&capture.stats),
+            Self::Text(query) => query.run(&capture.description) || query.run(&capture.instructions) || query.run(&capture.title)
         }
     }
 }
@@ -45,6 +47,7 @@ pub enum Project3 {
     Title(Logic<Text>),
     Description(Logic<Text>),
     Instructions(Logic<Text>),
+    Text(Logic<Text>)
 }
 
 impl Query for Project3 {
@@ -54,6 +57,7 @@ impl Query for Project3 {
             Self::Title(query) => query.run(&capture.title),
             Self::Description(query) => query.run(&capture.description),
             Self::Instructions(query) => query.run(&capture.instructions),
+            Self::Text(query) => query.run(&capture.title) || query.run(&capture.description) || query.run(&capture.instructions)
         }
     }
 }
