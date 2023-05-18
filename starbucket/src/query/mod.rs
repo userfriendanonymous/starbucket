@@ -14,13 +14,27 @@ pub mod studio;
 
 pub trait Query {
     type C;
-    fn run(&self, capture: &Self::C) -> bool;
+    type R;
+    fn run(&self, capture: &Self::C) -> std::option::Option<Self::R>;
 }
 
 #[derive(Debug, Clone)]
 pub enum Option<T: Query> {
     Some(T),
     None,
+}
+
+impl<T: Query> Query for Option<T> {
+    type R = std::option::Option<T::R>;
+    type C = std::option::Option<T::C>;
+    fn run(&self, capture: &Self::C) -> std::option::Option<Self::R> {
+        Some(match self {
+            Self::Some(query) => if let Some(data) = capture {
+                Some(Self::R::Some(query.run(data)?))
+            } else { None },
+            Self::None => if let None = capture { Some(Self::R::None) } else { None }
+        }?)
+    }
 }
 
 
@@ -31,23 +45,16 @@ pub enum NextDirection {
 }
 
 impl Query for NextDirection {
+    type R = location::NextDirection;
     type C = location::NextDirection;
-    fn run(&self, capture: &Self::C) -> bool {
+    fn run(&self, capture: &Self::C) -> std::option::Option<Self::R> {
         match self {
-            Self::Up => matches!(capture, location::NextDirection::Up),
-            Self::Down => matches!(capture, location::NextDirection::Down)
-        }
-    }
-}
-
-impl<T: Query> Query for Option<T> {
-    type C = std::option::Option<T::C>;
-    fn run(&self, capture: &Self::C) -> bool {
-        match self {
-            Self::Some(query) => if let Some(data) = capture {
-                query.run(data)
-            } else { false },
-            Self::None => matches!(capture, None)
+            Self::Up => if let location::NextDirection::Up = capture {
+                Some(Self::R::Up)
+            } else { None },
+            Self::Down => if let location::NextDirection::Down = capture {
+                Some(Self::R::Down)
+            } else { None },
         }
     }
 }
@@ -57,19 +64,25 @@ pub enum Vec<T: Query> {
     Any(T)
 }
 
+#[derive(Debug, Clone)]
+pub enum VecR<R> {
+    Index(usize, R)
+}
+
 impl<T: Query> Query for Vec<T> {
+    type R = VecR<T::R>;
     type C = std::vec::Vec<T::C>;
-    fn run(&self, capture: &Self::C) -> bool {
+    fn run(&self, capture: &Self::C) -> std::option::Option<Self::R> {
         match self {
             Self::Any(query) => {
-                let mut caught = false;
-                for item in capture.iter() {
-                    if query.run(item) {
-                        caught = true;
-                        break;
+                let mut catch = None;
+                for (idx, item) in capture.iter().enumerate() {
+                    if let Some(result) = query.run(item) {
+                        catch = Some(Self::R::Index(idx, result));
+                        break
                     }
                 }
-                caught
+                catch
             }
         }
     }
@@ -82,15 +95,16 @@ pub enum Result<T: Query, E: Query> {
 }
 
 impl<T: Query, E: Query> Query for Result<T, E> {
+    type R = std::result::Result<T::R, E::R>;
     type C = std::result::Result<T::C, E::C>;
-    fn run(&self, capture: &Self::C) -> bool {
+    fn run(&self, capture: &Self::C) -> std::option::Option<Self::R> {
         match self {
             Self::Ok(query) => if let Ok(capture) = capture {
-                query.run(capture)
-            } else { false },
+                Some(Self::R::Ok(query.run(capture)?))
+            } else { None },
             Self::Err(query) => if let Err(capture) = capture {
-                query.run(capture)
-            } else { false },
+                Some(Self::R::Err(query.run(capture)?))
+            } else { None },
         }
     }
 }
@@ -110,14 +124,33 @@ pub enum Logic<T: Query> {
     This(T)
 }
 
+#[derive(Debug, Clone)]
+pub enum LogicR<R> {
+    This(R),
+    Or(bool, Box<Self>),
+    And(Box<Self>, Box<Self>),
+    Not
+}
+
 impl<T: Query> Query for Logic<T> {
+    type R = LogicR<T::R>;
     type C = T::C;
-    fn run(&self, capture: &Self::C) -> bool {
+    fn run(&self, capture: &Self::C) -> std::option::Option<Self::R> {
         match self {
-            Self::And(left, right) => left.run(capture) && right.run(capture),
-            Self::Or(left, right) => left.run(capture) || right.run(capture),
-            Self::Not(this) => !this.run(capture),
-            Self::This(this) => this.run(capture)
+            Self::And(left, right) => if let Some(result_left) = left.run(capture) {
+                if let Some(result_right) = right.run(capture) {
+                    Some(Self::R::And(Box::new(result_left), Box::new(result_right)))
+                } else { None }
+            } else { None },
+            Self::Or(left, right) => if let Some(r) = left.run(capture) {
+                Some(Self::R::Or(false, Box::new(r)))
+            } else if let Some(r) = right.run(capture) {
+                Some(Self::R::Or(true, Box::new(r)))
+            } else { None },
+            Self::Not(this) => if let Some(r) = this.run(capture) { None } else {
+                Some(Self::R::Not)
+            },
+            Self::This(this) => Some(Self::R::This(this.run(capture)?))
         }
     }
 }
@@ -128,12 +161,19 @@ pub enum Cmp<T: Ord> {
     Equals(T),
 }
 
+#[derive(Debug, Clone)]
+pub enum CmpR {
+    Range,
+    Equals
+}
+
 impl<T: Ord> Query for Cmp<T> {
+    type R = CmpR;
     type C = T;
-    fn run(&self, capture: &Self::C) -> bool {
+    fn run(&self, capture: &Self::C) -> std::option::Option<Self::R> {
         match self {
-            Self::Range(range) => &range.start >= capture && &range.end < capture,
-            Self::Equals(data) => data == capture
+            Self::Range(range) => if &range.start >= capture && &range.end < capture { Some(Self::R::Range) } else { None },
+            Self::Equals(data) => if data == capture { Some(Self::R::Equals) } else { None }
         }
     }
 }
@@ -144,12 +184,22 @@ pub enum Text {
     Is(String),
 }
 
+#[derive(Debug, Clone)]
+pub enum TextR {
+    Range(usize, usize),
+    Full
+}
+
 impl Query for Text {
+    type R = TextR;
     type C = String;
-    fn run(&self, capture: &Self::C) -> bool {
+    fn run(&self, capture: &Self::C) -> std::option::Option<Self::R> {
         match self {
-            Self::Contains(data) => capture.to_ascii_lowercase().contains(&data.to_ascii_lowercase()),
-            Self::Is(data) => capture.to_ascii_lowercase() == data.to_ascii_lowercase()
+            Self::Contains(data) => {
+                let start = capture.to_ascii_lowercase().find(data)?;
+                Some(Self::R::Range(start, start + data.len()))
+            },
+            Self::Is(data) => if capture.to_ascii_lowercase() == data.to_ascii_lowercase() { Some(Self::R::Full) } else { None }
         }
     }
 }
@@ -158,8 +208,9 @@ impl Query for Text {
 pub struct Bool;
 
 impl Query for Bool {
+    type R = ();
     type C = bool;
-    fn run(&self, capture: &Self::C) -> bool {
-        *capture
+    fn run(&self, capture: &Self::C) -> std::option::Option<Self::R> {
+        if *capture { Some(()) } else { None }
     }
 }

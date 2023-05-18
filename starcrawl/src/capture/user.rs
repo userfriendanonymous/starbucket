@@ -1,4 +1,4 @@
-use s2rs::api::CommentContentFragment;
+use s2rs::api::UserCommentContentFragment;
 
 use crate::{location::{CrawlLocation, self}, active_text::PopulateActives};
 use super::Capture;
@@ -36,21 +36,22 @@ impl Capture for s2rs::api::UserComment {
     fn populate(&self) -> Vec<CrawlLocation> {
         let mut items = vec![];
         items.append(&mut populate_user(&self.author_name));
-        items.append(&mut self.content.0.populate());
+        items.append(&mut self.content.populate());
         items
     }
 }
 
-impl Capture for CommentContentFragment {
+impl Capture for UserCommentContentFragment {
     fn populate(&self) -> Vec<CrawlLocation> {
         match self {
-            CommentContentFragment::Link { to, content } => {
+            UserCommentContentFragment::Link { to, content } => {
                 let mut items = content.populate_actives();
                 items.append(&mut to.populate_actives());
                 items
             },
-            CommentContentFragment::Emoji(_) => vec![],
-            CommentContentFragment::Text(content) => content.populate_actives()
+            UserCommentContentFragment::Emoji(_) => vec![],
+            UserCommentContentFragment::Text(content) => content.populate_actives(),
+            UserCommentContentFragment::Tag(name) => populate_user(name)
         }
     }
 }

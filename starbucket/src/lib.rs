@@ -182,32 +182,14 @@ async fn test() {
     let api = s2rs::Api::new("");
 
     let mut locations = VecDeque::new();
-    locations.push_back(location::User("fffffffffffffffffffffffffffffffff".into()).into());
-    locations.push_back(location::UserProjects {
-        name: "fffffffffffffffffffffffffffffffff".into(),
-        next: Some(NextDirection::Up),
-        page: 1
-    }.into());
-    locations.push_back(location::UserFollowing {
-        name: "fffffffffffffffffffffffffffffffff".into(),
-        next: Some(NextDirection::Up),
-        page: 1
-    }.into());
-
-    locations.push_back(location::User("evelynn-".into()).into());
-    locations.push_back(location::UserProjects {
-        name: "evelynn-".into(),
-        next: Some(NextDirection::Up),
-        page: 1
-    }.into());
-    locations.push_back(location::UserFollowers {
-        name: "evelynn-".into(),
-        next: Some(NextDirection::Up),
-        page: 1
-    }.into());
 
     locations.push_back(location::User("x__0".into()).into());
     locations.push_back(location::UserProjects {
+        name: "x__0".into(),
+        next: Some(NextDirection::Up),
+        page: 1
+    }.into());
+    locations.push_back(location::UserComments {
         name: "x__0".into(),
         next: Some(NextDirection::Up),
         page: 1

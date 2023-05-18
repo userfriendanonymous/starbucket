@@ -6,7 +6,7 @@ edition = "2021"
 [lib]
 
 [dependencies]
-s2rs = "0.5.15"
+s2rs = "0.7.15"
 s2rs-derive = "0.1.2"
 starcrawl = { version = "0.1.0", path = "../starcrawl" }
 
